@@ -1,5 +1,9 @@
-target  = main
+target  = ../main
 object  = \
+  variablesMod.o \
+  utilitiesMod.o \
+  allocatorMod.o \
+  ioUtilityMod.o \
   main.o
 
 FC = gfortran

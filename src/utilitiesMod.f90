@@ -166,11 +166,35 @@ contains
   ! ====================================================== !
   ! === print section                                  === !
   ! ====================================================== !
-  subroutine print__section( title )
+  subroutine print__section( name, frame, nameLen, sideLen, frameLen )
     implicit none
-    write(6,*) ""
-    write(6,*) 
-    
+    integer           , intent(in) :: nameLen, frameLen, sideLen
+    character(nameLen), intent(in) :: name
+    character(1)      , intent(in) :: frame
+    character(2)                   :: num1, num2, num3, num4
+    character(100)                 :: fmt1, fmt2
+    integer                        :: spaceLen, remain
+
+    ! ------------------------------------------------------ !
+    ! --- [1] prepare                                    --- !
+    ! ------------------------------------------------------ !
+    spaceLen = ( frameLen - nameLen - 2*sideLen ) / 2
+    remain   = mod( ( frameLen - nameLen - 2*sideLen ),  2 )
+    write(num1,"(i2)")  nameLen + remain
+    write(num2,"(i2)")  sideLen
+    write(num3,"(i2)") frameLen
+    write(num4,"(i2)") spaceLen
+    num2     = adjustl(num2)
+    fmt1     = "(a" // trim(num3) // ")"
+    fmt2     = "(a" // trim(num2) // "," // trim(num4) // "x,a" // trim(num1) // ","
+    fmt2     = trim(fmt2) // trim(num4) // "x,a" // trim(num2) // ")"
+
+    ! ------------------------------------------------------ !
+    ! --- [2] write section                              --- !
+    ! ------------------------------------------------------ !
+    write(6,trim(fmt1)) repeat( frame, frameLen )
+    write(6,trim(fmt2)) repeat( frame, sideLen  ), trim(adjustl(name)), repeat( frame, sideLen  )
+    write(6,trim(fmt1)) repeat( frame, frameLen )
     
     return
   end subroutine print__section
@@ -182,11 +206,11 @@ contains
   subroutine show__programLogo
     implicit none
     character(1)  :: frame
-    character(3)  :: side
-    character(25) :: line1, line2, line3, line4, line5
+    character(4)  :: side
+    character(56) :: line1, line2, line3, line4, line5, line6
 
     frame = "="
-    side  = "==="
+    side  = "===="
     line1 = " _                  _                _           _      "
     line2 = "| |___ _ __ ___    / \   _ __   __ _| |_   _ ___(_)___  "
     line3 = "| / __| '_ ` _ \  / _ \ | '_ \ / _` | | | | / __| / __| "
@@ -196,14 +220,14 @@ contains
 
     write(6,*)
     write(6,*)
-    write(6,'((a55))') repeat( frame, 55 )
-    write(6,'(a3,12x,a25,12x,a3)')  side,  line1,  side
-    write(6,'(a3,12x,a25,12x,a3)')  side,  line2,  side
-    write(6,'(a3,12x,a25,12x,a3)')  side,  line3,  side
-    write(6,'(a3,12x,a25,12x,a3)')  side,  line4,  side
-    write(6,'(a3,12x,a25,12x,a3)')  side,  line5,  side
-    write(6,'(a3,12x,a25,12x,a3)')  side,  line6,  side
-    write(6,'((a55))') repeat( frame, 55 )
+    write(6,'((a70))') repeat( frame, 70 )
+    write(6,'(a4,3x,a56,3x,a4)')  side,  line1,  side
+    write(6,'(a4,3x,a56,3x,a4)')  side,  line2,  side
+    write(6,'(a4,3x,a56,3x,a4)')  side,  line3,  side
+    write(6,'(a4,3x,a56,3x,a4)')  side,  line4,  side
+    write(6,'(a4,3x,a56,3x,a4)')  side,  line5,  side
+    write(6,'(a4,3x,a56,3x,a4)')  side,  line6,  side
+    write(6,'((a70))') repeat( frame, 70 )
     write(6,*)
     write(6,*)
 
@@ -217,26 +241,26 @@ contains
   subroutine show__endLogo
     implicit none
     character(1)  :: frame
-    character(3)  :: side
-    character(19) :: line1, line2, line3, line4, line5
+    character(4)  :: side
+    character(20) :: line1, line2, line3, line4, line5
 
     frame = "="
-    side  = "==="
-    line1 = " _____ _   _ ____  "
-    line2 = "| ____| \ | |  _ \ "
-    line3 = "|  _| |  \| | | | |"
-    line4 = "| |___| |\  | |_| |"
-    line5 = "|_____|_| \_|____/ "
+    side  = "===="
+    line1 = " _____ _   _ ____   "
+    line2 = "| ____| \ | |  _ \  "
+    line3 = "|  _| |  \| | | | | "
+    line4 = "| |___| |\  | |_| | "
+    line5 = "|_____|_| \_|____/  "
 
     write(6,*)
     write(6,*)
-    write(6,"((a49))") repeat( frame, 49 )
-    write(6,"(a3,12x,a19,12x,a3)")  side,  line1,  side
-    write(6,"(a3,12x,a19,12x,a3)")  side,  line2,  side
-    write(6,"(a3,12x,a19,12x,a3)")  side,  line3,  side
-    write(6,"(a3,12x,a19,12x,a3)")  side,  line4,  side
-    write(6,"(a3,12x,a19,12x,a3)")  side,  line5,  side
-    write(6,"((a49))") repeat(  frame, 49 )
+    write(6,"((a70))") repeat( frame, 70 )
+    write(6,"(a4,21x,a20,21x,a4)")  side,  line1,  side
+    write(6,"(a4,21x,a20,21x,a4)")  side,  line2,  side
+    write(6,"(a4,21x,a20,21x,a4)")  side,  line3,  side
+    write(6,"(a4,21x,a20,21x,a4)")  side,  line4,  side
+    write(6,"(a4,21x,a20,21x,a4)")  side,  line5,  side
+    write(6,"((a70))") repeat(  frame, 70 )
     write(6,*)
     write(6,*)
 
