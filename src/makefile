@@ -3,12 +3,17 @@ object  = \
   variablesMod.o \
   utilitiesMod.o \
   allocatorMod.o \
+  bTriPrismMod.o \
+  cglsdenseMod.o \
+  invSolverMod.o \
+  updateEqsMod.o \
+  initiatorMod.o \
   ioUtilityMod.o \
   main.o
 
 FC = gfortran
 
-FFLAGS  = -O3
+FFLAGS  = -O3 -llapack -lblas
 LDFLAGS =
 
 

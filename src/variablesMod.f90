@@ -4,91 +4,78 @@ module variablesMod
   ! ------------------------------------------------------ !
   ! --- [1] Constants                                  --- !
   ! ------------------------------------------------------ !
-  integer         , parameter   :: cLen            = 300
-  integer         , parameter   :: lun             =  50
+  integer         , parameter   :: cLen              = 300
+  integer         , parameter   :: lun               =  50
+  integer         , parameter   :: dim               =   3
+  integer         , parameter   :: nVert             =   3
+  integer         , parameter   :: nMaxPicard        =  10
+  integer         , parameter   :: iter__timeDisplay =   5
+  integer         , parameter   :: iter__saveResults =   5
+
+  double precision, parameter   :: unit__thickness   = 1.d-3
 
   ! ------------------------------------------------------ !
-  ! --- [2] I/O Files                                  --- !
+  ! --- [2] suffix designation                         --- !
   ! ------------------------------------------------------ !
-  character(cLen) , parameter   :: listFile        = "dat/parameter.lst"
-  character(cLen) , parameter   :: nodeFile        = "dat/nodes.dat"
-  character(cLen) , parameter   :: elemFile        = "dat/elems.dat"
-  character(cLen) , parameter   :: binpFile        = "dat/bfield_input.dat"
+  !  -- for bfield, mshape, zp, weights, respectively  --  !
+  integer         , parameter :: xb_=1, yb_=2, zb_=3, bi_=4, bb_=5, bs_=6, bt_=7, be_=8
+  integer         , parameter :: xm_=1, ym_=2, zm_=3, mi_=4, ms_=5, mf_=6
+  integer         , parameter :: lo_=1, hi_=2
+  integer         , parameter :: xw_=1, yw_=2, zw_=3, cl_=4, wt_=5
+  
+  ! ------------------------------------------------------ !
+  ! --- [3] I/O Files                                  --- !
+  ! ------------------------------------------------------ !
+  character(cLen) , parameter   :: listFile          = "dat/parameter.lst"
+  character(cLen) , parameter   :: nodeFile          = "dat/nodes.dat"
+  character(cLen) , parameter   :: elemFile          = "dat/elems.dat"
+  character(cLen) , parameter   :: binpFile          = "dat/bfield_input.dat"
+  character(cLen) , parameter   :: mshpFile          = "dat/mshape_lsm.dat"
+  character(cLen) , parameter   :: wghtFile          = "dat/weights.dat"
+  character(cLen) , parameter   :: bresFile          = "out/bfield_resid.dat"
 
   ! ------------------------------------------------------ !
-  ! --- [3] system variables                           --- !
+  ! --- [4] flags                                      --- !
   ! ------------------------------------------------------ !
-  integer                       :: nBpt
-  integer                       :: iterMax
-  integer                       :: nElems, nNodes
-  
-  ! ------------------------------------------------------ !
-  ! --- [4] data variables                             --- !
-  ! ------------------------------------------------------ !
-  double precision, allocatable :: elems (:,:), nodes(:,:)
-  double precision, allocatable :: BField(:,:)
+  logical                       :: flag__exitStatus             = .false.
+  logical                       :: flag__laplaceRegularization  = .false.
   
 
+  ! ------------------------------------------------------ !
+  ! --- [5] parameters to be loaded from list File     --- !
+  ! ------------------------------------------------------ !
+  integer                       :: nSubdiv, nDiv_z, iterMax
+  double precision              :: MzConst, zLim1, zLim2, resid__criterion
+  character(4)                  :: lsm__engine       = "cgls"
+  character(3)                  :: solverType        = "wls"
+  character(10)                 :: convergenceType   = "rmse"
+
   
+  ! ------------------------------------------------------ !
+  ! --- [6] system variables                           --- !
+  ! ------------------------------------------------------ !
+  integer                       :: iter
+  integer                       :: nBpt, nMpt, nNpt
+  integer                       :: nElems, nNodes, nColor
+  double precision              :: coefPicard, wPicard(nMaxPicard), iPicard(nMaxPicard)
   
+  ! ------------------------------------------------------ !
+  ! --- [7] data variables                             --- !
+  ! ------------------------------------------------------ !
+  double precision              :: mvec(3)
+  integer         , allocatable :: elems(:,:)
+  double precision, allocatable :: nodes(:,:) , vertex(:,:,:)
+  double precision, allocatable :: bfield(:,:), mshape(:,:)
+  double precision, allocatable :: Amat(:,:)  , Rmat(:,:)
+  double precision, allocatable :: hvec(:)    , rhs (:)
+  double precision, allocatable :: wvec(:)    , weights(:,:)
+
+  ! ------------------------------------------------------ !
+  ! --- [8] residual statistics                        --- !
+  ! ------------------------------------------------------ !
+  double precision, allocatable :: avgs  (:), stds  (:), rmse   (:)
+  double precision, allocatable :: sumCnt(:), sumErr(:), sumErr2(:)
+  double precision, allocatable :: minErr(:), maxErr(:)
+  double precision              :: minRes(3), maxRes(3), rmsRes(3)
+
 end module variablesMod
-
-
-! module variablesMod
-!   implicit none
-!   ! ------------------------------------- !
-!   ! --- [1]  Constants                --- !
-!   ! ------------------------------------- !
-!   double precision, parameter   :: unit_thick      = 1.d-3 ! ( 1 mm : arbitral )
-!   logical                       :: Flag__Laplacian = .true.
-!   logical                       :: Flag__debugMode = .false.
-!   logical                       :: Flag__residConvergence = .true.
-!   logical                       :: Flag__initShape
-!   logical                       :: Flag__fullModel
-!   integer         , parameter   :: iter__tMeasure  =  10
-!   integer         , parameter   :: iter__save      =   1
-!   integer         , parameter   :: cLen            = 300
-!   integer         , parameter   :: lun             =  50
-!   ! ------------------------------------- !
-!   ! --- [2]  I/O Files                --- !
-!   ! ------------------------------------- !
-!   ! --   input   -- !
-!   character(cLen) , parameter   :: parmFile   = 'dat/parameter.conf'
-!   character(cLen) , parameter   :: listFile   = 'dat/parameter.lst'
-!   character(cLen) , parameter   :: BinpFile   = 'dat/bfield_input.dat'
-!   character(cLen) , parameter   :: mshpFile   = 'dat/mshape_input.dat'
-!   character(cLen) , parameter   :: wghtFile   = 'dat/weights.dat'
-!   character(cLen) , parameter   :: wcnfFile   = 'dat/weights.conf'
-!   ! --  output   -- !
-!   character(cLen) , parameter   :: BresFile   = 'out/bfield_resid.dat'
-!   ! -- for debug -- !
-!   character(cLen) , parameter   :: AmatFile   = 'chk/Amat.dat'
-!   character(cLen) , parameter   :: rhsbFile   = 'chk/rhsb.dat'
-!   character(cLen) , parameter   :: shimFile   = 'chk/shim.dat'
-!   ! ------------------------------------- !
-!   ! --- [3] Variables                 --- !
-!   ! ------------------------------------- !
-!   integer                       :: iter = 0
-!   integer                       :: iterMax, LI, LJ
-!   integer                       :: nBpt, nEpt , nNpt, nMpt, LM, LN, nDiv_B, iPicard_iter, nBpt_pole, nBpt_peel
-!   integer         , allocatable :: elems(:,:) , idtable(:,:)
-!   double precision, allocatable :: nodes(:,:) ,   initS(:,:), mshape(:,:,:)
-!   double precision, allocatable :: MagPos(:,:),  BField(:,:)
-!   double precision, allocatable :: shim(:), rhs(:), spectrum(:), singular(:), surf(:), lapl(:)
-!   double precision, allocatable :: Rmat(:,:), Lmat(:,:), Amat(:,:)
-!   double precision, allocatable :: weights(:), weight_info(:,:)
-!   double precision, allocatable :: avgs(:), stds(:), sumCnt(:), sumErr(:), sumErr2(:), minErr(:), maxErr(:)
-!   double precision              :: minRes(3), maxRes(3)
-!   double precision              :: wLaplace, MzConstant, mvec(3), wPicard, threshold
-!   double precision              :: wPicard_init, wPicard_last
-!   double precision              :: rLim1, rLim2, pLim1, pLim2, zLim1, zLim2
-!   double precision              :: xMin, xMax, yMin, yMax, dx, dy, ddx, ddy
-!   double precision              :: pJump
-!   double precision              :: resid_convergence
-!   character(3)                  :: solverType
-!   character(4)                  :: modelType
-!   character(4)                  :: LSM_engine
-  
-!   logical                       :: flag__exitStatus = .false.
-
-! end module variablesMod

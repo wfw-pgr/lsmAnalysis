@@ -192,12 +192,34 @@ contains
     ! ------------------------------------------------------ !
     ! --- [2] write section                              --- !
     ! ------------------------------------------------------ !
+    write(6,*)
     write(6,trim(fmt1)) repeat( frame, frameLen )
     write(6,trim(fmt2)) repeat( frame, sideLen  ), trim(adjustl(name)), repeat( frame, sideLen  )
     write(6,trim(fmt1)) repeat( frame, frameLen )
+    write(6,*)
     
     return
   end subroutine print__section
+
+
+  ! ====================================================== !
+  ! === print loop title                               === !
+  ! ====================================================== !
+  subroutine print__loopTitle( iter, iterMax )
+    implicit none
+    integer        , intent(in) :: iter, iterMax
+    integer        , parameter  :: cLen = 300
+    character(5)                :: citer, citerMax
+    character(cLen)             :: sectionTitle
+
+    write(citer   ,"(i4)") iter
+    write(citerMax,"(i4)") iterMax
+    sectionTitle = "Loop :: " // adjustr( trim(citer   ) ) // " / " &
+         &                    // adjustr( trim(citerMax) )
+    call print__section( trim(sectionTitle), "=" , len( trim(sectionTitle) ), 4, 70 )
+    
+    return
+  end subroutine print__loopTitle
 
   
   ! ====================================================== !
@@ -209,8 +231,8 @@ contains
     character(4)  :: side
     character(56) :: line1, line2, line3, line4, line5, line6
 
-    frame = "="
-    side  = "===="
+    frame = "#"
+    side  = "####"
     line1 = " _                  _                _           _      "
     line2 = "| |___ _ __ ___    / \   _ __   __ _| |_   _ ___(_)___  "
     line3 = "| / __| '_ ` _ \  / _ \ | '_ \ / _` | | | | / __| / __| "
@@ -244,8 +266,8 @@ contains
     character(4)  :: side
     character(20) :: line1, line2, line3, line4, line5
 
-    frame = "="
-    side  = "===="
+    frame = "#"
+    side  = "####"
     line1 = " _____ _   _ ____   "
     line2 = "| ____| \ | |  _ \  "
     line3 = "|  _| |  \| | | | | "
