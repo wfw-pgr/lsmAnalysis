@@ -40,13 +40,12 @@ program main
   call save__residuals
   call save__results
   call TimeMeasure( 4 )
-  
-
-  call print__section( "Begin Main Loop", "#" , 15, 4, 70 )
 
   ! ------------------------------------------------------ !
   ! --- [3] iteration of main solver                   --- !
   ! ------------------------------------------------------ !
+  call print__section( "Begin Main Loop", "#" , 15, 4, 70 )
+  
   do iter=1, iterMax
 
      ! :::::::::::::::::::::::::::::::::::::::::::::::::::::: !

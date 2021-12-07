@@ -1,0 +1,247 @@
+module utilitiesMod
+  implicit none
+  integer            :: rtime
+  double precision   :: ctime, accTime(2,9)
+contains
+
+  ! =================================================================== !
+  ! ===  TimeMeasure ::  Measure Time ( cpu & real )                === !
+  ! =================================================================== !
+  subroutine TimeMeasure( subject )
+    implicit none
+    integer             :: i, k, rtime_, trate, t_max
+    double precision    :: ctime_, hms(3)
+    character(41)       :: fmt
+    integer, intent(in) :: subject
+
+    ! ----------------------------------------- !
+    ! --- [0] Initialization :: subject=  0 --- !
+    ! ----------------------------------------- !
+    if ( subject.eq.0 ) then ! initialize
+       call system_clock( rtime )
+       call cpu_time    ( ctime )
+       accTime(:,:)      = 0.d0
+    endif
+    ! ----------------------------------------- !
+    ! --- [-1] Display Time  :: subject= -1 --- !
+    ! ----------------------------------------- !
+    if ( subject.eq.-1 ) then
+       write(6,*)
+       write(6,*) ' ---------------   Computation Time   --------------- '
+       write(6,*)
+       accTime(:,9) = 0.d0
+       do k=1, 2
+          do i=1, 8
+             accTime(k,9) = accTime(k,9) + accTime(k,i)
+          enddo
+
+          if ( k.eq.1 ) write(6,*) ' ----       CPU    Time      ---- '
+          if ( k.eq.2 ) write(6,*) ' ----       Real   Time      ---- '
+          hms = sec2hms( accTime(k,1) )
+          fmt = '(a,2x,e12.5,3x,2(i3,a),f7.3,a,3x,f7.3,a)'
+          write(6,fmt) ' Initialize   :: ', accTime(k,1), &
+               &         int(hms(1)), ' h ', int(hms(2)), ' m ', hms(3), ' s ', &
+               &         accTime(k,1)/accTime(k,9)*100.0, ' % '
+          hms = sec2hms( accTime(k,2) )
+          write(6,fmt) ' MainSolver   :: ', accTime(k,2), &
+               &         int(hms(1)), ' h ', int(hms(2)), ' m ', hms(3), ' s ', &
+               &         accTime(k,2)/accTime(k,9)*100.0, ' % '
+          hms = sec2hms( accTime(k,3) )
+          write(6,fmt) ' update Vars  :: ', accTime(k,3), &
+               &         int(hms(1)), ' h ', int(hms(2)), ' m ', hms(3), ' s ', &
+               &         accTime(k,3)/accTime(k,9)*100.0, ' % '
+          hms = sec2hms( accTime(k,4) )
+          write(6,fmt) ' write File   :: ', accTime(k,4), &
+               &         int(hms(1)), ' h ', int(hms(2)), ' m ', hms(3), ' s ', &
+               &         accTime(k,4)/accTime(k,9)*100.0, ' % '
+          hms = sec2hms( accTime(k,5) )
+          write(6,fmt) ' postProcess  :: ', accTime(k,5), &
+               &         int(hms(1)), ' h ', int(hms(2)), ' m ', hms(3), ' s ', &
+               &         accTime(k,5)/accTime(k,9)*100.0, ' % '
+          write(6,*) ' ----------------------------- '
+          write(6,*)
+
+       enddo
+    endif
+    ! ----------------------------------------- !
+    ! --- [1~8]  Count Up   :: subject= 1~8 --- !
+    ! ----------------------------------------- !
+    if ( ( subject.gt.0 ).and.( subject.le.8 ) ) then
+       ! ----------------- !
+       ! ---  CPU time --- !
+       ! ----------------- !
+       ctime_                = ctime
+       call cpu_time( ctime )
+       accTime(1,subject)    = accTime(1,subject) + ( ctime - ctime_ )
+       ! ----------------- !
+       ! --- Real time --- !
+       ! ----------------- !
+       rtime_                = rtime
+       call system_clock( rtime, trate, t_max )
+       if ( rtime.lt.rtime_ ) then
+          accTime(2,subject) = accTime(2,subject) + ( ( t_max - rtime_ ) + rtime + 1 ) / dble( trate )
+       else
+          accTime(2,subject) = accTime(2,subject) + ( rtime - rtime_ ) / dble( trate )
+       endif
+    endif
+
+    return
+  end subroutine TimeMeasure
+
+
+  ! =================================================================== !
+  ! ===  sec2hms :: 17 years old -> real age                        === !
+  ! =================================================================== !
+  function sec2hms( sec )
+    implicit none
+    double precision, intent(in) :: sec
+    real                         :: sec2hms(3)
+    sec2hms(1) = real( int( sec ) / 3600 )
+    sec2hms(2) = real( int( sec - 3600.0*sec2hms(1) ) / 60 )
+    sec2hms(3) = real( sec - 3600.0*sec2hms(1) - 60.0*sec2hms(2) )
+    return
+  end function sec2hms
+
+
+  ! ===================================== !
+  ! ===  Count up Number of Lines     === !
+  ! ===================================== !
+  subroutine getNumLines( InpFile, nLines )
+    implicit none
+    integer     , intent(out) :: nLines
+    character(*), intent(in)  :: InpFile
+    integer                   :: count, stat
+
+    count = 0
+    open (50,file=InpFile,status='old',form='formatted')
+    do
+       read(50,*,iostat=stat)
+       if ( stat<0 ) exit
+       count = count + 1
+    enddo
+    close(50)
+    nLines = count
+    return
+  end subroutine getNumLines
+
+
+  ! ===================================================== !
+  ! ===  DisplayClock                                 === !
+  ! ===================================================== !
+  subroutine DisplayClock
+    implicit none
+    integer           :: date_time(8)
+    character(len=10) :: sys_time(3)
+    character(len=34) :: fmt
+    call date_and_time(sys_time(1), sys_time(2), sys_time(3), date_time)
+    fmt = '(a,1x,i4.4,2(a,i2.2),3x,3(i2.2,a))'
+    write(6,fmt) '[DisplayClocK] ', date_time(1), '-', date_time(2), '-', date_time(3), &
+         &                          date_time(5), ':', date_time(6), ':', date_time(7), ' --'
+    return
+  end subroutine DisplayClock
+
+
+  ! ===================================================== !
+  ! ===  inspect Matrix                               === !
+  ! ===================================================== !
+  subroutine save__matrix( matrix, LI, LJ, FileName )
+    implicit none
+    integer         , intent(in) :: LI, LJ
+    character(*)    , intent(in) :: FileName
+    double precision, intent(in) :: matrix(LI,LJ)
+    integer                      :: i, j
+    
+    open(50,file=trim(FileName),form='formatted',status='replace')
+    write(50,*) '# Aij'
+    write(50,*) '# ', LI, LJ
+    do i=1, LI
+       write(50,*) ( matrix(i,j), j=1, LJ )
+    enddo
+    close(50)
+    write(6,*) '[save__matrix] output ::  ', trim(FileName)
+    return
+  end subroutine save__matrix
+
+  
+  ! ====================================================== !
+  ! === print section                                  === !
+  ! ====================================================== !
+  subroutine print__section( title )
+    implicit none
+    write(6,*) ""
+    write(6,*) 
+    
+    
+    return
+  end subroutine print__section
+
+  
+  ! ====================================================== !
+  ! === display program title logo                     === !
+  ! ====================================================== !
+  subroutine show__programLogo
+    implicit none
+    character(1)  :: frame
+    character(3)  :: side
+    character(25) :: line1, line2, line3, line4, line5
+
+    frame = "="
+    side  = "==="
+    line1 = " _                  _                _           _      "
+    line2 = "| |___ _ __ ___    / \   _ __   __ _| |_   _ ___(_)___  "
+    line3 = "| / __| '_ ` _ \  / _ \ | '_ \ / _` | | | | / __| / __| "
+    line4 = "| \__ \ | | | | |/ ___ \| | | | (_| | | |_| \__ \ \__ \ "
+    line5 = "|_|___/_| |_| |_/_/   \_\_| |_|\__,_|_|\__, |___/_|___/ "
+    line6 = "                                       |___/            "
+
+    write(6,*)
+    write(6,*)
+    write(6,'((a55))') repeat( frame, 55 )
+    write(6,'(a3,12x,a25,12x,a3)')  side,  line1,  side
+    write(6,'(a3,12x,a25,12x,a3)')  side,  line2,  side
+    write(6,'(a3,12x,a25,12x,a3)')  side,  line3,  side
+    write(6,'(a3,12x,a25,12x,a3)')  side,  line4,  side
+    write(6,'(a3,12x,a25,12x,a3)')  side,  line5,  side
+    write(6,'(a3,12x,a25,12x,a3)')  side,  line6,  side
+    write(6,'((a55))') repeat( frame, 55 )
+    write(6,*)
+    write(6,*)
+
+    return
+  end subroutine show__programLogo
+
+
+  ! ====================================================== !
+  ! === display program end logo                       === !
+  ! ====================================================== !
+  subroutine show__endLogo
+    implicit none
+    character(1)  :: frame
+    character(3)  :: side
+    character(19) :: line1, line2, line3, line4, line5
+
+    frame = "="
+    side  = "==="
+    line1 = " _____ _   _ ____  "
+    line2 = "| ____| \ | |  _ \ "
+    line3 = "|  _| |  \| | | | |"
+    line4 = "| |___| |\  | |_| |"
+    line5 = "|_____|_| \_|____/ "
+
+    write(6,*)
+    write(6,*)
+    write(6,"((a49))") repeat( frame, 49 )
+    write(6,"(a3,12x,a19,12x,a3)")  side,  line1,  side
+    write(6,"(a3,12x,a19,12x,a3)")  side,  line2,  side
+    write(6,"(a3,12x,a19,12x,a3)")  side,  line3,  side
+    write(6,"(a3,12x,a19,12x,a3)")  side,  line4,  side
+    write(6,"(a3,12x,a19,12x,a3)")  side,  line5,  side
+    write(6,"((a49))") repeat(  frame, 49 )
+    write(6,*)
+    write(6,*)
+
+    return
+  end subroutine show__endLogo
+
+  
+end module utilitiesMod

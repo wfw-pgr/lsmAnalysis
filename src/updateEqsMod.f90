@@ -30,7 +30,7 @@ contains
     use bTriPrismMod
     implicit none
     integer                     :: ib, ie, iv, col, row
-    double precision            :: bval, bsum, bfdpos(dim), zp(2)
+    double precision            :: bval, bsum, bfdpos(dim), zp(2), vert(dim,nVert)
     
     ! ------------------------------------------------------ !
     ! --- [1] calculate response matrix                  --- !
@@ -41,14 +41,16 @@ contains
        do ie=1, nElems
           zp(lo_)     = mshape(zm_,ie) - 0.5d0*unit__thickness
           zp(hi_)     = mshape(zm_,ie) + 0.5d0*unit__thickness
-          ! zp(lo_)    = mshape(zm_,ie)
-          ! zp(hi_)    = mshape(zm_,ie) + unit__thickness
           
-          call magneticField__triPrism( vertex(:,:,ie), bfdpos, mvec, zp, bval, nSubdiv, nDiv_z )
+          vert(:,:)   = vertex(:,:,ie)
+          call magneticField__triPrism( vert, bfdpos, mvec, zp, bval, nSubdiv, nDiv_z )
           
           Rmat(ib,ie) = bval
        enddo
     enddo
+    ! -- single-side ver. -- !
+    ! zp(lo_)    = mshape(zm_,ie)
+    ! zp(hi_)    = mshape(zm_,ie) + unit__thickness
 
     ! ------------------------------------------------------ !
     ! --- [2] Store in Amatrix                           --- !
@@ -96,8 +98,8 @@ contains
     use variablesMod
     use bTriPrismMod
     implicit none
-    integer                     :: ib, ie, iv
-    double precision            :: bval, bsum, bfdpos(dim), zp(2)
+    integer          :: ib, ie, iv
+    double precision :: bval, bsum, bfdpos(dim), zp(2), vert(dim,nVert)
 
     ! ------------------------------------------------------ !
     ! --- [1] summing up bfield from all prisms          --- !
@@ -109,8 +111,8 @@ contains
        do ie=1, nElems
           zp(lo_)    = mshape(mi_,ie)
           zp(hi_)    = mshape(zm_,ie)
-          
-          call magneticField__triPrism( vertex(:,:,ie), bfdpos, mvec, zp, bval, nSubdiv, nDiv_z )
+          vert(:,:)  = vertex(:,:,ie)
+          call magneticField__triPrism( vert, bfdpos, mvec, zp, bval, nSubdiv, nDiv_z )
           
           bsum       = bsum + bval
        enddo
