@@ -29,7 +29,7 @@ program main
   call print__section( "Initialize variables / Conditions", "=" , 33, 4, 70 )
   call allocate__variables
   call initialize__conditions
-  call print__section( "Prepare Matrix & R.H.S.", "=" , 23, 4, 70 )
+  call print__section( "Prepare Matrix & R.H.S."          , "=" , 23, 4, 70 )
   call TimeMeasure( 1 )
   
   call update__matrix
@@ -97,5 +97,3 @@ program main
   call show__endLogo
   
 end program main
-
-

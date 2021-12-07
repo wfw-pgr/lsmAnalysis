@@ -2,3 +2,4 @@
 *.dat
 *.mod
 *.o
+src/old/*

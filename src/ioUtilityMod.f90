@@ -1,6 +1,5 @@
 module ioUtilityMod
 contains
-
   
   ! ===================================================== !
   ! ===  Load Parameter File                          === !
@@ -88,7 +87,7 @@ contains
     use variablesMod
     implicit none
     integer                     :: ie, nrow, ncol
-    integer        , parameter  :: nComps = 6
+    integer        , parameter  :: nComps = 7
     character(cLen)             :: cmt
 
     ! ------------------------------------------------------ !
@@ -236,10 +235,10 @@ contains
     write(6,'(a,1x,a25)',advance='no') '[save__result] saving :: ', trim(FileName)
     open (lun,file=trim(FileName),form='formatted',status='replace')
     write(lun,*) "# xm_ ym_ zm_ mi_ ms_ mf_"
-    write(lun,'(a,2(1x,i8))') "# ", nElems, 6
-    write(lun,'(a,2(1x,i8))') "# ", nElems, 6
+    write(lun,'(a,2(1x,i8))') "# ", nElems, 7
+    write(lun,'(a,2(1x,i8))') "# ", nElems, 7
     do ik=1, nElems
-       write(lun,'(6(e15.8,1x))') mshape(:,ik)
+       write(lun,'(7(e15.8,1x))') mshape(:,ik)
     enddo
     close(lun)
     write(6,"(3x,a)") "[Done]"

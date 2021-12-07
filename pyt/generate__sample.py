@@ -26,7 +26,7 @@ def generate__sampleField():
     coord,radii = coord[index], radii[index]
     bb          = 0.050 * np.exp( ( -0.5 ) * ( radii / radius )**2 * 3.0 ) + 2.500
     db          = 0.050 * np.exp( ( -0.5 ) * ( radii / radius )**2 * 3.0 ) - 0.025
-    bi          = bb + db
+    bi          = bb * 0.0 + 2.5
     Data        = np.concatenate( [coord,bi[:,None],bb[:,None]], axis=1 )
 
     # ------------------------------------------------- #

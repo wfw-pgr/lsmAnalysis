@@ -42,9 +42,9 @@ def generate__element( mshFile="msh/mesh.msh" ):
     # --- [5] add info. about the mshape            --- #
     # ------------------------------------------------- #
     init,flag = np.copy( Data[:,z_] )[:,None], np.ones( (Data.shape[0],1) )
-    shim      = np.zeros( (Data.shape[0],1) )
-    Data      = np.concatenate( [Data,init,shim,flag], axis=1 )
-    names     = [ "xm", "ym", "zm", "mi", "ms", "mf" ]
+    shim,grup = np.zeros( (Data.shape[0],1) ), ( np.arange( Data.shape[0] ) + 1 )[:,None]
+    Data      = np.concatenate( [Data,init,shim,flag,grup], axis=1 )
+    names     = [ "xm", "ym", "zm", "mi", "ms", "mf", "mg" ]
     
     # ------------------------------------------------- #
     # --- [5] save in a file                        --- #

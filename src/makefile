@@ -2,6 +2,7 @@ target  = ../main
 object  = \
   variablesMod.o \
   utilitiesMod.o \
+  lstStructMod.o \
   allocatorMod.o \
   bTriPrismMod.o \
   cglsdenseMod.o \
