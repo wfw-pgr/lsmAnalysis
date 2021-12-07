@@ -18,10 +18,10 @@ module variablesMod
   ! --- [2] suffix designation                         --- !
   ! ------------------------------------------------------ !
   !  -- for bfield, mshape, zp, weights, respectively  --  !
-  integer         , parameter :: xb_=1, yb_=2, zb_=3, bi_=4, bb_=5, bs_=6, bt_=7, be_=8
-  integer         , parameter :: xm_=1, ym_=2, zm_=3, mi_=4, ms_=5, mf_=6, mg_=7
-  integer         , parameter :: lo_=1, hi_=2
-  integer         , parameter :: xw_=1, yw_=2, zw_=3, cl_=4, wt_=5
+  integer         , parameter   :: xb_=1, yb_=2, zb_=3, bi_=4, bb_=5, bs_=6, bt_=7, be_=8
+  integer         , parameter   :: xm_=1, ym_=2, zm_=3, mi_=4, ms_=5, mf_=6, mg_=7
+  integer         , parameter   :: lo_=1, hi_=2
+  integer         , parameter   :: xw_=1, yw_=2, zw_=3, cl_=4, wt_=5
   
   ! ------------------------------------------------------ !
   ! --- [3] I/O Files                                  --- !
