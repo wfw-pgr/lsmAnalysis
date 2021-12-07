@@ -22,6 +22,14 @@ module lstStructMod
      integer                      :: nCell = 0
      integer        , allocatable :: cells(:)
   end type list_type
+
+  ! ------------------------------------------------------ !
+  ! --- variables                                      --- !
+  ! ------------------------------------------------------ !
+  type(list_type), pointer     :: groupList
+  integer        , allocatable :: groupNums(:), groupedCells(:)
+  integer                      :: nGroups, max_nCell
+
   
 contains
 

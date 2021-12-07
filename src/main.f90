@@ -58,7 +58,7 @@ program main
      ! ::: [3-2] solve inverse problem                    ::: !
      ! :::::::::::::::::::::::::::::::::::::::::::::::::::::: !
      if ( solverType.eq."wls" ) then
-        call WLS_MatrixInvertor( Amat, rhs, hvec, wvec, nMpt, nNpt, lsm__engine )
+        call WLS_MatrixInvertor( Amat, rhs, xvec, wvec, nMpt, nNpt, lsm__engine )
      endif
      call TimeMeasure( 2 )
      

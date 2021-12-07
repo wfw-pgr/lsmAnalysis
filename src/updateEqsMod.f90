@@ -27,14 +27,16 @@ contains
   ! ====================================================== !
   subroutine generate__responseMatrix
     use variablesMod
+    use lstStructMod
     use bTriPrismMod
     implicit none
-    integer                     :: ib, ie, iv, col, row
+    integer                     :: ib, ie, iv, ic, col, row, nCell
     double precision            :: bval, bsum, bfdpos(dim), zp(2), vert(dim,nVert)
     
     ! ------------------------------------------------------ !
     ! --- [1] calculate response matrix                  --- !
     ! ------------------------------------------------------ !
+    Rmat(:,:) = 0.d0
     do ib=1, nBpt
        bfdpos(:)  = bfield(xb_:zb_,ib)
        
@@ -55,15 +57,15 @@ contains
     ! ------------------------------------------------------ !
     ! --- [2] Store in Amatrix                           --- !
     ! ------------------------------------------------------ !
-    !$omp parallel default(none) shared(Amat,Rmat,nNpt,nBpt) private(col,row)
-    !$omp do
+    Amat(:,:) = 0.d0
     do col=1, nNpt
-       do row=1, nBpt
-          Amat(row,col) = Rmat(row,col)
+       call obtain__cellsInGroup( groupList, col, nCell, groupedCells, max_nCell )
+       do ic=1, nCell
+          do row=1, nBpt
+             Amat(row,col) = Amat(row,col) + Rmat(row,groupedCells(ic))
+          enddo
        enddo
     enddo
-    !$omp end do
-    !$omp end parallel
     
     return
   end subroutine generate__responseMatrix
@@ -193,6 +195,7 @@ contains
     ! --- [1] pilling-up / digging Magnet pole surface   --- !
     ! ------------------------------------------------------ !
     do ie=1, nElems
+       hvec(ie)       = xvec( int( mshape(mg_,ie) ) )
        mshape(ms_,ie) = hvec(ie) * unit__thickness
        mshape(zm_,ie) = mshape(zm_,ie) - coefPicard*mshape(ms_,ie)
        mshape(zm_,ie) = max( min( mshape(zm_,ie), zLim2 ), zLim1 )

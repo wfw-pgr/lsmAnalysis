@@ -1,6 +1,7 @@
 target  = ../main
 object  = \
   variablesMod.o \
+  lstStructMod.o \
   utilitiesMod.o \
   lstStructMod.o \
   allocatorMod.o \
