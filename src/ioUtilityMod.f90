@@ -88,7 +88,7 @@ contains
     use variablesMod
     implicit none
     integer                     :: ie, nrow, ncol
-    integer        , parameter  :: nComps = 6
+    integer        , parameter  :: nComps = 7
     character(cLen)             :: cmt
 
     ! ------------------------------------------------------ !
