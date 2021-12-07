@@ -6,6 +6,7 @@ contains
   ! ====================================================== !
   subroutine allocate__variables
     use variablesMod
+    use lstStructMod
     implicit none
 
     ! ------------------------------------------------------ !
@@ -13,13 +14,14 @@ contains
     ! ------------------------------------------------------ !
     write(6,"(a)",advance="no") "[allocate__variables] allocating variables..... "
     nMpt = nBpt
-    nNpt = nElems
+    nNpt = nGroups
+    nEpt = nElems
 
     ! ------------------------------------------------------ !
     ! --- [2] allocation                                 --- !
     ! ------------------------------------------------------ !
-    allocate( Rmat(nMpt,nNpt), Amat(nMpt,nNpt) )
-    allocate( rhs(nMpt), hvec(nNpt), wvec(nMpt) )
+    allocate( Rmat(nMpt,nEpt), Amat(nMpt,nNpt) )
+    allocate( rhs(nMpt), hvec(nEpt), xvec(nNpt), wvec(nMpt) )
     allocate( vertex(dim,nVert,nElems) )
 
     ! ------------------------------------------------------ !

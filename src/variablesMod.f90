@@ -19,7 +19,7 @@ module variablesMod
   ! ------------------------------------------------------ !
   !  -- for bfield, mshape, zp, weights, respectively  --  !
   integer         , parameter :: xb_=1, yb_=2, zb_=3, bi_=4, bb_=5, bs_=6, bt_=7, be_=8
-  integer         , parameter :: xm_=1, ym_=2, zm_=3, mi_=4, ms_=5, mf_=6
+  integer         , parameter :: xm_=1, ym_=2, zm_=3, mi_=4, ms_=5, mf_=6, mg_=7
   integer         , parameter :: lo_=1, hi_=2
   integer         , parameter :: xw_=1, yw_=2, zw_=3, cl_=4, wt_=5
   
@@ -55,7 +55,7 @@ module variablesMod
   ! --- [6] system variables                           --- !
   ! ------------------------------------------------------ !
   integer                       :: iter
-  integer                       :: nBpt, nMpt, nNpt
+  integer                       :: nBpt, nMpt, nNpt, nEpt
   integer                       :: nElems, nNodes, nColor
   double precision              :: coefPicard, wPicard(nMaxPicard), iPicard(nMaxPicard)
   
@@ -67,8 +67,9 @@ module variablesMod
   double precision, allocatable :: nodes(:,:) , vertex(:,:,:)
   double precision, allocatable :: bfield(:,:), mshape(:,:)
   double precision, allocatable :: Amat(:,:)  , Rmat(:,:)
-  double precision, allocatable :: hvec(:)    , rhs (:)
+  double precision, allocatable :: xvec(:)    , hvec(:)
   double precision, allocatable :: wvec(:)    , weights(:,:)
+  double precision, allocatable :: rhs (:)
 
   ! ------------------------------------------------------ !
   ! --- [8] residual statistics                        --- !

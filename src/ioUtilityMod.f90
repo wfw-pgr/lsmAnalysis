@@ -86,6 +86,7 @@ contains
   ! ====================================================== !
   subroutine load__mshapeFile
     use variablesMod
+    use lstStructMod
     implicit none
     integer                     :: ie, nrow, ncol
     integer        , parameter  :: nComps = 7
@@ -108,6 +109,26 @@ contains
     enddo
     close(lun)
     write(6,"(3x,a)") "[Done]"
+
+    ! ------------------------------------------------------ !
+    ! --- [2] extract group info.                        --- !
+    ! ------------------------------------------------------ !
+    nullify( groupList )
+    do ie=1, nElems
+       call add__elementInList( groupList, elementNum=ie, groupNum=int(mshape(mg_,ie)) )
+    enddo
+    
+    call investigate__listInfo( groupList, max_nCell, nGroups )
+    
+    allocate( groupNums(nGroups), groupedCells(max_nCell) )
+    write(6,*)
+    write(6,"(a)"    ) "[load__mshapeFile]  --------  *  grouping  *  ---------"
+    write(6,"(a,i10)") "[load__mshapeFile]        nGroup :: ", nGroups
+    write(6,"(a,i10)") "[load__mshapeFile]     max_nCell :: ", max_nCell
+    write(6,"(a)"    ) "[load__mshapeFile]  --------  *  grouping  *  ---------"
+    write(6,*)
+
+    call obtain__groupNumArray( groupList, groupNums, nGroups )
     
     return
   end subroutine load__mshapeFile

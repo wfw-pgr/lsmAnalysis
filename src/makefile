@@ -1,6 +1,7 @@
 target  = ../main
 object  = \
   variablesMod.o \
+  lstStructMod.o \
   utilitiesMod.o \
   allocatorMod.o \
   bTriPrismMod.o \
