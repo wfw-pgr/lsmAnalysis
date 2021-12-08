@@ -3,7 +3,6 @@ object  = \
   variablesMod.o \
   lstStructMod.o \
   utilitiesMod.o \
-  lstStructMod.o \
   allocatorMod.o \
   bTriPrismMod.o \
   cglsdenseMod.o \
