@@ -19,6 +19,7 @@ module lstStructMod
      type(list_type), pointer     :: next
      integer                      :: elementNum
      integer                      :: groupNum
+     integer                      :: in_use
      integer                      :: nCell = 0
      integer        , allocatable :: cells(:)
   end type list_type
