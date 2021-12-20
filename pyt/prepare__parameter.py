@@ -9,8 +9,9 @@ import nkUtilities.save__constants as scn
 def prepare__parameter( inpFile="dat/unified.conf", lstFile="dat/parameter.lst" ):
 
     contentsList = [ "lsm.iterMax", "lsm.nSubdiv", "lsm.nDiv_z", "lsm.MzConst", \
-                     "lsm.zLim1", "lsm.zLim2", "lsm.resid__criterion", \
-                     "lsm.iPicard", "lsm.wPicard", "lsm.lsm__engine", "lsm.solverType", \
+                     "lsm.zLim1", "lsm.zLim2", "lsm.resid__criterion", "lsm.wSmooth", \
+                     "lsm.iPicard", "lsm.wPicard", "lsm.lsm__engine",  \
+                     "lsm.solverType", "lsm.smoothType", \
                      "lsm.convergenceType" ]
     
     # ------------------------------------------------- #

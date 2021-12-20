@@ -51,6 +51,7 @@ def display__mshape( num=None ):
     config["cmp_yAutoRange"] = True
     config["cmp_xRange"]     = [-5.0,+5.0]
     config["cmp_yRange"]     = [-5.0,+5.0]
+    config["cmp_pointSW"]    = True
 
     # ------------------------------------------------- #
     # --- [5] plot Figure                           --- #

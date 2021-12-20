@@ -17,10 +17,9 @@ module lstStructMod
   ! ------------------------------------------------------ !
   type :: list_type
      type(list_type), pointer     :: next
-     integer                      :: elementNum
      integer                      :: groupNum
-     integer                      :: in_use
-     integer                      :: nCell = 0
+     integer                      :: in_use = 0
+     integer                      :: nCell  = 0
      integer        , allocatable :: cells(:)
   end type list_type
 
@@ -28,8 +27,8 @@ module lstStructMod
   ! --- variables                                      --- !
   ! ------------------------------------------------------ !
   type(list_type), pointer     :: groupList
-  integer        , allocatable :: groupNums(:), groupedCells(:)
-  integer                      :: nGroups, max_nCell
+  integer        , allocatable :: groupNums(:), groupedCells(:), group_index(:)
+  integer                      :: nGroups, nUsed, max_nCell
 
   
 contains
@@ -38,11 +37,11 @@ contains
   ! ====================================================== !
   ! === make new node of a list                        === !
   ! ====================================================== !
-  subroutine make__nodeInList( list, next, elementNum, groupNum )
+  subroutine make__nodeInList( list, next, elementNum, groupNum, in_use )
     implicit none
     type(list_type), pointer,           intent(out) :: list
     type(list_type), pointer, optional, intent(in ) :: next
-    integer        ,          optional, intent(in ) :: elementNum, groupNum
+    integer        ,          optional, intent(in ) :: elementNum, groupNum, in_use
 
     ! ------------------------------------------------------ !
     ! --- [1] list allocation check                      --- !
@@ -66,6 +65,9 @@ contains
     endif
     if ( present( groupNum ) ) then
        list%groupNum   = groupNum
+    endif
+    if ( present( in_use   ) ) then
+       list%in_use     = in_use
     endif
     if ( present( elementNum ) ) then
        list%nCell      = list%nCell + 1
@@ -119,14 +121,14 @@ contains
   ! ====================================================== !
   ! ===  append node to a list                         === !
   ! ====================================================== !
-  subroutine append__nodeInList( list, elementNum, groupNum )
+  subroutine append__nodeInList( list, elementNum, groupNum, in_use )
     implicit none
-    integer        ,          intent(in) :: elementNum, groupNum
+    integer        ,          intent(in) :: elementNum, groupNum, in_use
     type(list_type), pointer, intent(in) :: list
     type(list_type), pointer             :: iter
 
     iter => tail__nodeInList( list )
-    call make__nodeInList( iter%next, elementNum=elementNum, groupNum=groupNum )
+    call make__nodeInList( iter%next, elementNum=elementNum, groupNum=groupNum, in_use=in_use )
     return
   end subroutine append__nodeInList
 
@@ -134,9 +136,9 @@ contains
   ! ====================================================== !
   ! === add element into list                          === !
   ! ====================================================== !
-  subroutine add__elementInList( list, elementNum, groupNum )
+  subroutine add__elementInList( list, elementNum, groupNum, in_use )
     implicit none
-    integer        ,          intent(in)    :: elementNum, groupNum
+    integer        ,          intent(in)    :: elementNum, groupNum, in_use
     type(list_type), pointer, intent(inout) :: list
     type(list_type), pointer                :: iter
     integer        , allocatable            :: temp(:)
@@ -162,6 +164,9 @@ contains
                 iter%cells(ik) = temp(ik)
              enddo
              iter%cells(iter%nCell) = elementNum
+             if ( iter%in_use.ne.in_use ) then
+                write(6,*) "[add__elementInList] different in_use flag..... [WARNING] "
+             endif
              flag__groupExist  = .true.
              exit
           endif
@@ -172,12 +177,12 @@ contains
           endif
        enddo
        if ( .not.( flag__groupExist ) ) then
-          ! -- no node for groupNum-- !
-          call append__nodeInList( list, elementNum=elementNum, groupNum=groupNum )
+          ! -- no node for groupNum -- !
+          call append__nodeInList( list, elementNum=elementNum, groupNum=groupNum, in_use=in_use )
        endif
     else
        ! -- first group -- !
-       call make__nodeInList( list, elementNum=elementNum, groupNum=groupNum )
+       call make__nodeInList( list, elementNum=elementNum, groupNum=groupNum, in_use=in_use )
     endif
 
     return
@@ -187,19 +192,21 @@ contains
   ! ====================================================== !
   ! === investigate max. nCell / list length           === !
   ! ====================================================== !
-  subroutine investigate__listInfo( list, max_nCell, list_length )
+  subroutine investigate__listInfo( list, max_nCell_loc, list_length, num_in_use )
     implicit none
     type(list_type), pointer, intent(in)  :: list
-    integer        ,          intent(out) :: max_nCell, list_length
+    integer        ,          intent(out) :: max_nCell_loc, list_length, num_in_use
     type(list_type), pointer              :: iter
     
-    max_nCell   = 0
-    list_length = 0
+    max_nCell_loc = 0
+    list_length   = 0
+    num_in_use    = 0
     if ( associated( list ) ) then
        iter => list
        do
-          list_length = list_length + 1
-          max_nCell   = max( max_nCell, iter%nCell )
+          list_length   = list_length + 1
+          max_nCell_loc = max( max_nCell_loc, iter%nCell )
+          num_in_use    = num_in_use + iter%in_use
           if ( associated(iter%next) ) then
              iter => iter%next
           else
@@ -218,12 +225,12 @@ contains
   ! ====================================================== !
   ! === obtain cells in a group                        === !
   ! ====================================================== !
-  subroutine obtain__cellsInGroup( list, groupNum, nCell, cell_ret, cell_len )
+  subroutine obtain__cellsInGroup( list, groupNum, nCell, cell_ret, cell_len, in_use )
     implicit none
     type(list_type), pointer, intent(in)  :: list
     integer                 , intent(in)  :: groupNum
     integer                 , intent(in)  :: cell_len
-    integer                 , intent(out) :: nCell, cell_ret(cell_len)
+    integer                 , intent(out) :: nCell, cell_ret(cell_len), in_use
     type(list_type), pointer              :: iter
     logical                               :: flag__groupExist
     
@@ -235,6 +242,7 @@ contains
           if ( iter%groupNum.eq.groupNum ) then
              cell_ret(1:iter%nCell) = iter%cells(1:iter%nCell)
              nCell                  = iter%nCell
+             in_use                 = iter%in_use
              flag__groupExist       = .true.
              exit
           end if

@@ -81,5 +81,5 @@ def generate__circleMesh( lc1=0.0, lc2=0.0, radius=1.0, side="+" ):
 
 if ( __name__=="__main__" ):
     side = "+-"
-    generate__circleMesh( side=side, lc1=0.080, lc2=0.080 )
+    generate__circleMesh( side=side, lc1=0.050, lc2=0.050 )
     save__elem_and_node()

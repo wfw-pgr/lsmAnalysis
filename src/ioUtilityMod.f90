@@ -7,8 +7,10 @@ contains
   subroutine load__parameterFile
     use variablesMod
     implicit none
+    character(cLen) :: cmt
     namelist /parameters/ iterMax, nSubdiv, nDiv_z, MzConst, zLim1, zLim2, iPicard, wPicard, &
-         &                resid__criterion, lsm__engine, solverType, convergenceType
+         &                resid__criterion, wSmooth, lsm__engine, solverType, smoothType, &
+         &                convergenceType
 
     ! ------------------------------------------------------ !
     ! --- [1] default value                              --- !
@@ -29,11 +31,43 @@ contains
     ! ------------------------------------------------------ !
     ! --- [3] post process                               --- !
     ! ------------------------------------------------------ !
+    if      ( trim(smoothType).eq."nosmooth" ) then
+       flag__smoothing = .false.
+       flag__simpleavg = .false.
+       flag__laplacian = .false.
+    else if ( trim(smoothType).eq."average" ) then
+       flag__smoothing = .true.
+       flag__simpleavg = .true.
+       flag__laplacian = .false.
+    else if ( trim(smoothType).eq."laplace" ) then
+       flag__smoothing = .true.
+       flag__simpleavg = .false.
+       flag__laplacian = .true.
+    endif
     
     ! ------------------------------------------------------ !
     ! --- [4] display parameters                         --- !
     ! ------------------------------------------------------ !
-    
+    cmt = "[load__parameterFile]"
+    write(6,*)
+    write(6,"(a21,a)") cmt, " loaded variables...."
+    write(6,*)
+    write(6,"(a21,1x,a25,1x,i12)"  ) cmt, "iterMax"         , iterMax
+    write(6,"(a21,1x,a25,1x,i12)"  ) cmt, "nSubdiv"         , nSubdiv
+    write(6,"(a21,1x,a25,1x,i12)"  ) cmt, "nDiv_z"          , nDiv_z
+    write(6,"(a21,1x,a25,1x,e12.5)") cmt, "MzConst"         , MzConst
+    write(6,"(a21,1x,a25,1x,e12.5)") cmt, "zLim1"           , zLim1
+    write(6,"(a21,1x,a25,1x,e12.5)") cmt, "zLim2"           , zLim2
+    write(6,"(a21,1x,a25,1x,e12.5)") cmt, "resid__criterion", resid__criterion
+    write(6,"(a21,1x,a25,1x,e12.5)") cmt, "wSmooth"         , wSmooth
+    write(6,"(a21,1x,a25,1x,a12)"  ) cmt, "lsm__engine"     , trim(lsm__engine)
+    write(6,"(a21,1x,a25,1x,a12)"  ) cmt, "solverType"      , trim(solverType)
+    write(6,"(a21,1x,a25,1x,a12)"  ) cmt, "smoothType"      , trim(smoothType)
+    write(6,"(a21,1x,a25,1x,a12)"  ) cmt, "convergenceType" , trim(convergenceType)
+    ! write(6,"(a21,1x,a25,1x,i12)"  ) cmt, "iPicard"         , iPicard
+    ! write(6,"(a21,1x,a25,1x,e12.5)") cmt, "wPicard"         , wPicard
+    write(6,*)
+    write(6,*)
     return
   end subroutine load__parameterFile
 
@@ -114,16 +148,18 @@ contains
     ! ------------------------------------------------------ !
     nullify( groupList )
     do ie=1, nElems
-       call add__elementInList( groupList, elementNum=ie, groupNum=int(mshape(mg_,ie)) )
+       call add__elementInList( groupList, elementNum=ie, groupNum=int(mshape(mg_,ie)), &
+            &                   in_use=int( mshape(mf_,ie) ) )
     enddo
     
-    call investigate__listInfo( groupList, max_nCell, nGroups )
+    call investigate__listInfo( groupList, max_nCell, nGroups, nUsed )
     
-    allocate( groupNums(nGroups), groupedCells(max_nCell) )
+    allocate( groupNums(nGroups), groupedCells(max_nCell), group_index(nUsed) )
     write(6,*)
     write(6,"(a)"    ) "[load__mshapeFile]  --------  *  grouping  *  ---------"
-    write(6,"(a,i10)") "[load__mshapeFile]        nGroup :: ", nGroups
-    write(6,"(a,i10)") "[load__mshapeFile]     max_nCell :: ", max_nCell
+    write(6,"(a,i10)") "[load__mshapeFile]     nGroups    :: ", nGroups
+    write(6,"(a,i10)") "[load__mshapeFile]     nUsed      :: ", nUsed
+    write(6,"(a,i10)") "[load__mshapeFile]     max_nCell  :: ", max_nCell
     write(6,"(a)"    ) "[load__mshapeFile]  --------  *  grouping  *  ---------"
     write(6,*)
 

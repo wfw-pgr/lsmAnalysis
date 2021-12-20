@@ -22,7 +22,7 @@ program main
   call load__mshapeFile
   call load__weightFile
   call TimeMeasure( 1 )
-
+  
   ! ------------------------------------------------------ !
   ! --- [2] initialization                             --- !
   ! ------------------------------------------------------ !
@@ -36,18 +36,18 @@ program main
   call update__bfield
   call update__rhs
   call TimeMeasure( 3 )
-
+  
   call save__residuals
   call save__results
   call TimeMeasure( 4 )
-
+  
   ! ------------------------------------------------------ !
   ! --- [3] iteration of main solver                   --- !
   ! ------------------------------------------------------ !
   call print__section( "Begin Main Loop", "#" , 15, 4, 70 )
   
   do iter=1, iterMax
-
+     
      ! :::::::::::::::::::::::::::::::::::::::::::::::::::::: !
      ! ::: [3-1] display loop info                        ::: !
      ! :::::::::::::::::::::::::::::::::::::::::::::::::::::: !

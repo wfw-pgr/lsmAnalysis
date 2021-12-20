@@ -6,10 +6,12 @@ MzConst                  = 2.0
 zLim1                    = 0.01
 zLim2                    = 0.3
 resid__criterion         = 1e-05
+wSmooth                  = 1.0
 iPicard                  = 1,11,21
 wPicard                  = 0.2,0.7,0.2
 lsm__engine              = "cgls"
 solverType               = "wls"
+smoothType               = "average"
 convergenceType          = "rmse"
 /   ! -- End of parameters
 

@@ -39,15 +39,17 @@ module variablesMod
   ! ------------------------------------------------------ !
   logical                       :: flag__exitStatus             = .false.
   logical                       :: flag__laplaceRegularization  = .false.
-  
+  logical                       :: flag__smoothing, flag__simpleAvg, flag__laplacian
 
   ! ------------------------------------------------------ !
   ! --- [5] parameters to be loaded from list File     --- !
   ! ------------------------------------------------------ !
   integer                       :: nSubdiv, nDiv_z, iterMax
   double precision              :: MzConst, zLim1, zLim2, resid__criterion
+  double precision              :: wSmooth           =  1.d0
   character(4)                  :: lsm__engine       = "cgls"
   character(3)                  :: solverType        = "wls"
+  character(10)                 :: smoothType        = "none"
   character(10)                 :: convergenceType   = "rmse"
 
   
@@ -67,7 +69,9 @@ module variablesMod
   double precision, allocatable :: nodes(:,:) , vertex(:,:,:)
   double precision, allocatable :: bfield(:,:), mshape(:,:)
   double precision, allocatable :: Amat(:,:)  , Rmat(:,:)
+  double precision, allocatable :: Mmat(:,:)  , Lmat(:,:)
   double precision, allocatable :: xvec(:)    , hvec(:)
+  double precision, allocatable :: kvec(:,:)  , lvec(:)
   double precision, allocatable :: wvec(:)    , weights(:,:)
   double precision, allocatable :: rhs (:)
 

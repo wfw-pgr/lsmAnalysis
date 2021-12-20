@@ -4,6 +4,7 @@ object  = \
   lstStructMod.o \
   utilitiesMod.o \
   allocatorMod.o \
+  smoothMatMod.o \
   bTriPrismMod.o \
   cglsdenseMod.o \
   invSolverMod.o \

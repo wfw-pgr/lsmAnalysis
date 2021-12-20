@@ -5,6 +5,7 @@ contains
   ! === update matrix                                  === !
   ! ====================================================== !
   subroutine update__matrix
+    use variablesMod
     implicit none
     
     ! ------------------------------------------------------ !
@@ -15,9 +16,15 @@ contains
     ! ------------------------------------------------------ !
     ! --- [2] Laplacian Matrix                           --- !
     ! ------------------------------------------------------ !
-    ! if ( flag__Laplacian ) then
-    !    call generate__laplaceMatrix
-    ! endif
+    if ( flag__smoothing ) then
+       if ( flag__simpleAvg ) then
+          call generate__averageMatrix
+       endif
+       if ( flag__Laplacian ) then
+          ! call generate__laplaceMatrix
+       endif
+    endif
+    
     return
   end subroutine update__matrix
 
@@ -30,13 +37,14 @@ contains
     use lstStructMod
     use bTriPrismMod
     implicit none
-    integer                     :: ib, ie, iv, ic, col, row, nCell
+    integer                     :: ib, ie, iv, ic, iG, col, row, nCell, in_use
     double precision            :: bval, bsum, bfdpos(dim), zp(2), vert(dim,nVert)
-    
+
     ! ------------------------------------------------------ !
     ! --- [1] calculate response matrix                  --- !
     ! ------------------------------------------------------ !
     Rmat(:,:) = 0.d0
+    write(6,"(a)",advance="no") "[generate__responseMatrix] generating   Rmat..."
     do ib=1, nBpt
        bfdpos(:)  = bfield(xb_:zb_,ib)
        
@@ -50,6 +58,7 @@ contains
           Rmat(ib,ie) = bval
        enddo
     enddo
+    write(6,"(a)", advance="yes") "    [END]"
     ! -- single-side ver. -- !
     ! zp(lo_)    = mshape(zm_,ie)
     ! zp(hi_)    = mshape(zm_,ie) + unit__thickness
@@ -57,18 +66,121 @@ contains
     ! ------------------------------------------------------ !
     ! --- [2] Store in Amatrix                           --- !
     ! ------------------------------------------------------ !
+    write(6,"(a)",advance="no") "[generate__responseMatrix] storing into Amat..."
+    col       = 0
     Amat(:,:) = 0.d0
-    do col=1, nNpt
-       call obtain__cellsInGroup( groupList, col, nCell, groupedCells, max_nCell )
-       do ic=1, nCell
-          do row=1, nBpt
-             Amat(row,col) = Amat(row,col) + Rmat(row,groupedCells(ic))
+    do iG=1, nGroups
+       call obtain__cellsInGroup( groupList, iG, nCell, groupedCells, max_nCell, in_use )
+       if ( in_use.eq.1 ) then
+          col             = col + 1
+          group_index(iG) = col
+          do ic=1, nCell
+             do row=1, nBpt
+                Amat(row,col) = Amat(row,col) + Rmat(row,groupedCells(ic))
+             enddo
           enddo
-       enddo
+       else
+          group_index(iG) = -1
+       endif
     enddo
+    if ( col.ne.nNpt ) then
+       write(6,*) "[generate__responseMatrix]  nUsed & nNpt is incompatible.... [ERROR]"
+       stop
+    endif
+    write(6,"(a)", advance="yes") "    [END]"
     
     return
   end subroutine generate__responseMatrix
+
+
+  ! ====================================================== !
+  ! === generate simple average matrix                 === !
+  ! ====================================================== !
+  subroutine generate__averageMatrix
+    use variablesMod
+    use lstStructMod
+    use smoothMatMod
+    implicit none
+    integer                       :: row, col, iG, ic, in_use, nCell, ioffset
+    double precision, allocatable :: Mcmp(:,:)
+    logical         , save        :: flag__initialize = .true.
+
+    if ( flag__initialize ) then
+
+       
+       ! ------------------------------------------------------ !
+       ! --- [1] generate Averaging Matrix :: [M]           --- !
+       ! ------------------------------------------------------ !
+       Mmat(:,:) = 0.d0
+       write(6,"(a)",advance="no") "[generate__responseMatrix] generating   Mmat..."
+       call generate__simpleAverageMatrix( elems, Mmat, nElems, nNodes )
+       write(6,"(a)", advance="yes") "    [END]"
+    
+       ! ------------------------------------------------------ !
+       ! --- [2] compress in row direction                  --- !
+       ! ------------------------------------------------------ !
+       write(6,"(a)",advance="no") "[generate__responseMatrix] generating   Lmat..."
+
+       allocate( Mcmp(nUsed,nElems) )
+       row = 0
+       do iG=1, nGroups
+          call obtain__cellsInGroup( groupList, iG, nCell, groupedCells, max_nCell, in_use )
+          if ( in_use.eq.1 ) then
+             row = row + 1
+             do ic=1, nCell
+                Mcmp(row,:) = Mcmp(row,:) + Mmat(groupedCells(ic),:)
+             enddo
+          endif
+       enddo
+       
+       ! ------------------------------------------------------ !
+       ! --- [3] compress in column direction               --- !
+       ! ------------------------------------------------------ !
+       Lmat(:,:) = 0.d0
+       col = 0
+       do iG=1, nGroups
+          call obtain__cellsInGroup( groupList, iG, nCell, groupedCells, max_nCell, in_use )
+          if ( in_use.eq.1 ) then
+             col = col + 1
+             do ic=1, nCell
+                do row=1, nUsed
+                   Lmat(row,col) = Lmat(row,col) + Mcmp(row,groupedCells(ic))
+                enddo
+             enddo
+          endif
+       enddo
+       
+       ! ------------------------------------------------------ !
+       ! --- [4] weight factor for L-Matrix :: [L]          --- !
+       ! ------------------------------------------------------ !
+       do col=1, nUsed
+          do row=1, nUsed
+             Lmat(row,col) = wSmooth * Lmat(row,col)
+          enddo
+       enddo
+
+       ! ------------------------------------------------------ !
+       ! --- [5] deallocate Mcmp                            --- !
+       ! ------------------------------------------------------ !
+       deallocate( Mcmp )
+       flag__initialize = .false.
+       write(6,"(a)", advance="yes") "    [END]"
+    endif
+
+    ! ------------------------------------------------------ !
+    ! --- [6] substituition into Amat                    --- !
+    ! ------------------------------------------------------ !
+    write(6,"(a)",advance="no") "[generate__responseMatrix] storing into Amat..."
+    ioffset = nBpt
+    do col=1, nUsed
+       do row=1, nUsed
+          Amat(ioffset+row,col) = Lmat(row,col)
+       enddo
+    enddo
+    write(6,"(a)", advance="yes") "    [END]"
+    
+    return
+  end subroutine generate__averageMatrix
   
   
   ! ====================================================== !
@@ -79,9 +191,9 @@ contains
     implicit none
     integer :: iB
     
-    ! ------------------------------------- !
-    ! --- [1] update error Field        --- !
-    ! ------------------------------------- !
+    ! ------------------------------------------------------ !
+    ! --- [1] update error field as rhs                  --- !
+    ! ------------------------------------------------------ !
     !$omp parallel default(none) shared(rhs,bfield,nBpt) private(iB)
     !$omp do
     do iB=1, nBpt
@@ -89,6 +201,12 @@ contains
     enddo
     !$omp end do
     !$omp end parallel
+
+    ! ------------------------------------------------------ !
+    ! --- [2] update rhs for simple averaging            --- !
+    ! ------------------------------------------------------ !
+    call operate__simpleAverageMatrix
+    
     return
   end subroutine update__rhs
 
@@ -111,12 +229,12 @@ contains
        bfdpos(:) = bfield(xb_:zb_,ib)
        
        do ie=1, nElems
-          zp(lo_)    = mshape(mi_,ie)
-          zp(hi_)    = mshape(zm_,ie)
-          vert(:,:)  = vertex(:,:,ie)
+          zp(lo_)     = mshape(mi_,ie)
+          zp(hi_)     = mshape(zm_,ie)
+          vert(:,:)   = vertex(:,:,ie)
           call magneticField__triPrism( vert, bfdpos, mvec, zp, bval, nSubdiv, nDiv_z )
           
-          bsum       = bsum + bval
+          bsum        = bsum + bval
        enddo
        bfield(bs_,ib) = bsum
     enddo
@@ -128,7 +246,7 @@ contains
        bfield(bt_,ib) = bfield(bb_,ib) + bfield(bs_,ib)
        bfield(be_,ib) = bfield(bt_,ib) - bfield(bi_,ib)
     enddo
-    
+
     return
   end subroutine update__bfield
 
@@ -188,21 +306,71 @@ contains
   ! ====================================================== !
   subroutine update__mshape
     use variablesMod
+    use lstStructMod
     implicit none
-    integer :: ie
+    integer :: ie, col
 
     ! ------------------------------------------------------ !
     ! --- [1] pilling-up / digging Magnet pole surface   --- !
     ! ------------------------------------------------------ !
     do ie=1, nElems
-       hvec(ie)       = xvec( int( mshape(mg_,ie) ) )
-       mshape(ms_,ie) = hvec(ie) * unit__thickness
-       mshape(zm_,ie) = mshape(zm_,ie) - coefPicard*mshape(ms_,ie)
-       mshape(zm_,ie) = max( min( mshape(zm_,ie), zLim2 ), zLim1 )
+       col = group_index( int( mshape(mg_,ie) ) )
+       if ( col.gt.0 ) then
+          hvec(ie)       = xvec(col)
+          mshape(ms_,ie) = hvec(ie) * unit__thickness
+          mshape(zm_,ie) = mshape(zm_,ie) - coefPicard*mshape(ms_,ie)
+          mshape(zm_,ie) = max( min( mshape(zm_,ie), zLim2 ), zLim1 )
+       endif
     enddo
 
     return
   end subroutine update__mshape
+
+
+  ! ====================================================== !
+  ! === make rhs for simple smoothing matrix           === !
+  ! ====================================================== !
+  subroutine operate__simpleAverageMatrix
+    use variablesMod
+    use smoothMatMod
+    use lstStructMod
+    implicit none
+    integer :: row, ie, ic, iG, ioffset, nCell, in_use
+    
+    ! ------------------------------------------------------ !
+    ! --- [1] smoothing matrix                           --- !
+    ! ------------------------------------------------------ !
+    kvec(:,:) = 0.d0
+    do ie=1, nElems
+       hvec(ie) = mshape(zm_,ie)
+    enddo
+    call matrix__multiply( Mmat, hvec, kvec, nElems, nElems, 1 )
+
+    ! ------------------------------------------------------ !
+    ! --- [2] compress kvec by grouping                  --- !
+    ! ------------------------------------------------------ !
+    row     = 0
+    lvec(:) = 0.d0
+    do iG=1, nGroups
+       call obtain__cellsInGroup( groupList, iG, nCell, groupedCells, max_nCell, in_use )
+       if ( in_use.eq.1 ) then
+          row = row + 1
+          do ic=1, nCell
+             lvec(row) = lvec(row) + kvec(groupedCells(ic),1)
+          enddo
+       endif
+    enddo
+
+    ! ------------------------------------------------------ !
+    ! --- [3] store in r.h.s.                            --- !
+    ! ------------------------------------------------------ !
+    ioffset = nBpt
+    do iG=1, nUsed
+       rhs(ioffset+iG) = lvec(iG)
+    enddo
+    
+    return
+  end subroutine operate__simpleAverageMatrix
 
   
 end module updateEqsMod
