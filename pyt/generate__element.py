@@ -8,7 +8,7 @@ import nkUtilities.cMapTri        as cmt
 # ===  generate element info.                           === #
 # ========================================================= #
 
-def generate__element( mshFile="msh/mesh.msh" ):
+def generate__element( mshFile="msh/mesh.msh", inpFile="dat/mshape_svd.dat" ):
 
     x_, y_, z_ = 0, 1, 2
     
@@ -23,9 +23,11 @@ def generate__element( mshFile="msh/mesh.msh" ):
     # --- [2] load mshape info.                     --- #
     # ------------------------------------------------- #
     import nkUtilities.load__pointFile as lpf
-    inpFile = "dat/mshape_svd.dat"
     grids   = lpf.load__pointFile( inpFile=inpFile, returnType="structured" )
 
+    # import nkBasicAlgs.intrude__boundary as bdr
+    # grids   = bdr.intrude__boundary( Data=grids )
+    
     # ------------------------------------------------- #
     # --- [3] calculate element Center              --- #
     # ------------------------------------------------- #
@@ -35,8 +37,9 @@ def generate__element( mshFile="msh/mesh.msh" ):
     # --- [4] interpolate on the center of element  --- #
     # ------------------------------------------------- #
     import nkInterpolator.interpolate__grid2point as g2p
-    Data    = g2p.interpolate__grid2point( gridData=grids, pointData=centers, \
-                                           method="linear" )
+    gridData = grids[:,:,0:3]
+    Data     = g2p.interpolate__grid2point( gridData=gridData, pointData=centers, \
+                                            method="linear" )
 
     # ------------------------------------------------- #
     # --- [5] add info. about the mshape            --- #

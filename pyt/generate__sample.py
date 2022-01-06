@@ -37,7 +37,18 @@ def generate__sampleField():
     spf.save__pointFile( outFile=outFile, Data=Data )
 
     # ------------------------------------------------- #
-    # --- [3] sample png                            --- #
+    # --- [3] save in each file                     --- #
+    # ------------------------------------------------- #
+    zeros     = np.zeros_like( bb )
+    Data1     = np.concatenate( [coord,zeros[:,None],zeros[:,None],bb[:,None]], axis=1 )
+    Data2     = np.concatenate( [coord,zeros[:,None],zeros[:,None],bi[:,None]], axis=1 )
+    outFile1  = "dat/ems_pst.field"
+    outFile2  = "dat/pole_ideal_mcoord.dat"
+    spf.save__pointFile( outFile=outFile1, Data=Data1 )
+    spf.save__pointFile( outFile=outFile2, Data=Data2 )
+    
+    # ------------------------------------------------- #
+    # --- [4] sample png                            --- #
     # ------------------------------------------------- #
     coord_ = np.reshape( coord, (-1,3) )
     config                   = lcf.load__config()

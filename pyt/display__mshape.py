@@ -9,7 +9,7 @@ import nkUtilities.configSettings as cfs
 # ========================================================= #
 def display__mshape( num=None ):
 
-    x_, y_, z_, i_, s_, f_, = 0, 1, 2, 3, 4, 5,
+    x_, y_, z_, i_, s_, f_, g_ = 0, 1, 2, 3, 4, 5, 6
 
     # ------------------------------------------------- #
     # --- [1] latest number check                   --- #
@@ -65,6 +65,39 @@ def display__mshape( num=None ):
     cmt.cMapTri( xAxis=Data[:,x_], yAxis=Data[:,y_], cMap=Data[:,f_], \
     		 pngFile=pngFile.format( "flag" ), config=config )
 
+
+# ========================================================= #
+# ===  display__group                                  === #
+# ========================================================= #
+
+def display__group():
+
+    # ------------------------------------------------- #
+    # --- [2] File name Set                         --- #
+    # ------------------------------------------------- #
+    outFile  = "png/mshape_lsm.vtu"
+    elemFile = "dat/elems.dat"
+    nodeFile = "dat/nodes.dat"
+    mshpFile = "dat/mshape_lsm.dat"
+    
+    # ------------------------------------------------- #
+    # --- [3] Fetch Data                            --- #
+    # ------------------------------------------------- #
+    import nkUtilities.load__pointFile as lpf
+    elems  = lpf.load__pointFile( inpFile=elemFile, returnType="point" )
+    nodes  = lpf.load__pointFile( inpFile=nodeFile, returnType="point" )
+    mshape = lpf.load__pointFile( inpFile=mshpFile, returnType="point" )
+    elems  = np.array( elems, np.int64 )
+    names  = [ "x", "y", "z", "init", "shim", "flag", "group" ]
+    
+    # ------------------------------------------------- #
+    # --- [4] construct uGrid                       --- #
+    # ------------------------------------------------- #
+    import nkVTKRoutines.construct__uGrid as cug
+    cug.construct__uGrid( nodes=nodes, elems=elems, vtkFile=outFile, \
+                          cellData=mshape, cellDataName=names )
+    return()
+    
 # ======================================== #
 # ===  実行部                          === #
 # ======================================== #
